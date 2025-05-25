@@ -1,6 +1,12 @@
 org 0x7C00
 bits 16
 
+; Объявляем внешние символы
+extern command_help
+extern command_shut
+extern command_table
+extern command_table_end
+
 start:
     cli
     xor ax, ax
@@ -10,34 +16,41 @@ start:
     mov sp, 0x7C00
     sti
 
-    ; Очистка экрана (меньше байт, чем mov ax, 0x0003 + int 0x10)
-    mov ah, 0x00
-    mov al, 0x03
+    ; Очистка экрана
+    mov ax, 0x0003
     int 0x10
 
-    ; Оптимизированный вывод логотипа (меньше строк)
-    mov si, logo
+    ; Оптимизированный вывод логотипа
+    mov si, logo1
+    call print_str
+    mov si, logo2
+    call print_str
+    mov si, logo3
     call print_str
 
+    ; Автовывод справки
     call command_help
 
 main_loop:
     mov si, prompt
     call print_str
     
+    ; Чтение команды
     call read_input
+    
+    ; Обработка команды
     call exec_command
     jmp main_loop
 
-; ========== Функции ==========
+; ----- Основные функции -----
 read_input:
     mov di, input_buf
-    mov cx, 10
+    mov cx, 8          ; Уменьшенный буфер
     xor al, al
     rep stosb
     mov di, input_buf
 .key:
-    xor ah, ah       ; xor использует меньше байт чем mov ah, 0
+    mov ah, 0
     int 0x16
     
     cmp al, 0x0D
@@ -46,7 +59,7 @@ read_input:
     cmp al, 0x08
     je .back
     
-    cmp di, input_buf+9
+    cmp di, input_buf+7
     ja .key
     
     stosb
@@ -61,7 +74,8 @@ read_input:
     dec di
     mov byte [di], 0
     
-    mov ax, 0x0E08   ; Объединяем два mov в один
+    mov ah, 0x0E
+    mov al, 0x08
     int 0x10
     mov al, ' '
     int 0x10
@@ -81,25 +95,26 @@ exec_command:
     mov di, input_buf
     call str_cmp
     jc .found
-    add si, 6
+    add si, 5          ; Уменьшенный размер записи
     cmp si, command_table_end
     jb .check
+    
     mov si, unknown_cmd
     call print_str
     ret
 .found:
-    add si, 5
-    call word [si]
+    call [si+4]        ; Оптимизированный вызов
     ret
 
 str_cmp:
     pusha
 .loop:
-    lodsb
+    mov al, [si]
     cmp al, [di]
     jne .no
     test al, al
     jz .yes
+    inc si
     inc di
     jmp .loop
 .yes:
@@ -121,48 +136,15 @@ print_str:
 .done:
     ret
 
-; ========== Команды ==========
-command_help:
-    mov si, help_msg
-    call print_str
-    ret
-
-command_shut:
-    mov si, shut_msg
-    call print_str
-    ; Более компактный способ выключения
-    mov ax, 0x2000
-    mov dx, 0x604
-    out dx, ax
-    hlt
-    ret
-
-; ========== Данные ==========
-; Объединенный логотип (меньше места)
-logo db "  _  __  _ __     _  __", 0x0D, 0x0A
-     db " | |/ /  _ \|_ _|  _ \   / _ \/ ___|", 0x0D, 0x0A
-     db " | ' /| |_)   |_) | | | | \___ \", 0x0D, 0x0A
-     db " | . \|  _ < | ||  __/  | |_| |___) |", 0x0D, 0x0A
-     db " |_|\_\_| \_\___|_|      \___/|____/", 0x0D, 0x0A, 0
+; ----- Данные -----
+logo1 db "  _  __  _ __", 0x0D, 0x0A, 0
+logo2 db " | |/ / | | |", 0x0D, 0x0A, 0
+logo3 db " |_|\_\_|_|_|", 0x0D, 0x0A, 0
 
 prompt db "KripOS> ", 0
 newline db 0x0D, 0x0A, 0
-unknown_cmd db "Unknown cmd", 0x0D, 0x0A, 0  ; Сокращено
-help_msg db "Commands:", 0x0D, 0x0A         ; Сокращено
-         db " help - This msg", 0x0D, 0x0A
-         db " shut - Power off", 0x0D, 0x0A, 0
-shut_msg db "Shutting down...", 0x0D, 0x0A, 0
+unknown_cmd db "Unknown cmd", 0x0D, 0x0A, 0
+input_buf times 8 db 0
 
-input_buf times 8 db 0  ; Уменьшен буфер
-
-; Таблица команд (оптимизированная)
-command_table:
-    db "help", 0
-    dw command_help
-    db "shut", 0
-    dw command_shut
-command_table_end:
-
-; Загрузочная сигнатура
 times 510-($-$$) db 0
 dw 0xAA55
