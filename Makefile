@@ -10,9 +10,10 @@ asm:
 c:
 	gcc -m32 -c src/boot.c -o cboot.o
 	gcc -m32 -c src/logo.c -o logo.o
+	gcc -m32 -c src/keyboard/kb.c -o keyboard.o
 
 link:
-	ld -m elf_i386 -T linker.ld -o kernel entry.o sign.o cboot.o logo.o io.o
+	ld -m elf_i386 -T linker.ld -o kernel entry.o sign.o cboot.o logo.o io.o keyboard.o
 
 clean-temp:
 	rm -f *.o
