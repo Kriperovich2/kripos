@@ -3,7 +3,7 @@
     
   ![logo](logo.jpg)
 
-
+[![Telegram Group](https://github.com/termux/termux-app/workflows/Build/badge.svg)](t.me/kripos_fans)
 
 
 # Description
@@ -49,3 +49,8 @@ clear - clear console
 
 
 4.idk ❌
+
+
+
+
+
