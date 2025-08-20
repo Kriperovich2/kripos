@@ -3,7 +3,7 @@
     
   ![logo](logo.jpg)
 
-[![Telegram Group](https://github.com/termux/termux-app/workflows/Build/badge.svg)](t.me/kripos_fans)
+[![Telegram Group](https://img.shields.io/badge/group_in-telegram-blue)](https://t.me/kripos_fans)
 
 
 # Description
