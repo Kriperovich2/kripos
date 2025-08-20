@@ -1,12 +1,6 @@
 org 0x7C00
 bits 16
 
-; Объявляем внешние символы
-extern command_help
-extern command_shut
-extern command_table
-extern command_table_end
-
 start:
     cli
     xor ax, ax
@@ -20,32 +14,81 @@ start:
     mov ax, 0x0003
     int 0x10
 
-    ; Оптимизированный вывод логотипа
-    mov si, logo1
+    ; Приветствие
+    mov si, welcome_msg
     call print_str
-    mov si, logo2
-    call print_str
-    mov si, logo3
-    call print_str
-
-    ; Автовывод справки
-    call command_help
 
 main_loop:
     mov si, prompt
     call print_str
     
-    ; Чтение команды
     call read_input
     
-    ; Обработка команды
-    call exec_command
+    mov si, input_buf
+    
+    mov di, cmd_help
+    call str_cmp
+    jc .do_help
+
+    mov di, cmd_shut
+    call str_cmp
+    jc .do_shut
+    
+    mov di, cmd_reboot
+    call str_cmp
+    jc .do_reboot
+
+    mov di, cmd_clear
+    call str_cmp
+    jc .do_clear
+
+    mov di, cmd_info
+    call str_cmp
+    jc .do_info
+    
+    mov si, unknown_cmd
+    call print_str
+    jmp main_loop
+
+.do_help:
+    mov si, help_msg
+    call print_str
+    jmp main_loop
+
+.do_shut:
+    mov si, shut_msg
+    call print_str
+    mov dx, 0x604
+    mov ax, 0x2000
+    out dx, ax
+    hlt
+    jmp main_loop
+
+.do_reboot:
+    mov si, reboot_msg
+    call print_str
+    call delay
+    int 0x19
+    mov ax, 0
+    mov ds, ax
+    mov [0], ax
+    jmp 0xFFFF:0
+    jmp main_loop
+
+.do_clear:
+    mov ax, 0x0003
+    int 0x10
+    jmp main_loop
+
+.do_info:
+    mov si, info_msg
+    call print_str
     jmp main_loop
 
 ; ----- Основные функции -----
 read_input:
     mov di, input_buf
-    mov cx, 8          ; Уменьшенный буфер
+    mov cx, 32
     xor al, al
     rep stosb
     mov di, input_buf
@@ -59,7 +102,7 @@ read_input:
     cmp al, 0x08
     je .back
     
-    cmp di, input_buf+7
+    cmp di, input_buf+31
     ja .key
     
     stosb
@@ -89,28 +132,21 @@ read_input:
     call print_str
     ret
 
-exec_command:
-    mov si, command_table
-.check:
-    mov di, input_buf
-    call str_cmp
-    jc .found
-    add si, 5          ; Уменьшенный размер записи
-    cmp si, command_table_end
-    jb .check
-    
-    mov si, unknown_cmd
-    call print_str
-    ret
-.found:
-    call [si+4]        ; Оптимизированный вызов
+delay:
+    push cx
+    mov cx, 0xFFFF
+.delay_loop:
+    nop
+    loop .delay_loop
+    pop cx
     ret
 
 str_cmp:
     pusha
 .loop:
     mov al, [si]
-    cmp al, [di]
+    mov bl, [di]
+    cmp al, bl
     jne .no
     test al, al
     jz .yes
@@ -137,14 +173,32 @@ print_str:
     ret
 
 ; ----- Данные -----
-logo1 db "  _  __  _ __", 0x0D, 0x0A, 0
-logo2 db " | |/ / | | |", 0x0D, 0x0A, 0
-logo3 db " |_|\_\_|_|_|", 0x0D, 0x0A, 0
-
+welcome_msg db "KripOS Console v1.0", 0x0D, 0x0A, 0
 prompt db "KripOS> ", 0
 newline db 0x0D, 0x0A, 0
-unknown_cmd db "Unknown cmd", 0x0D, 0x0A, 0
-input_buf times 8 db 0
+unknown_cmd db "unknown", 0x0D, 0x0A, 0
+input_buf times 32 db 0
+
+cmd_help db "help", 0
+cmd_shut db "shut", 0
+cmd_reboot db "reboot", 0
+cmd_clear db "clear", 0
+cmd_info db "info", 0
+
+help_msg db "Cmds:", 0x0D, 0x0A
+         db "help - list", 0x0D, 0x0A
+         db "shut - off", 0x0D, 0x0A
+         db "info - sys", 0x0D, 0x0A 
+         db "clear - scr", 0x0D, 0x0A
+         db "reboot", 0x0D, 0x0A
+         db "", 0x0D, 0x0A, 0
+
+shut_msg db "Power off", 0x0D, 0x0A, 0
+reboot_msg db "Rebooting", 0x0D, 0x0A, 0
+
+info_msg db "KripOS v1", 0x0D, 0x0A
+         db "Author-Kriperovich", 0x0D, 0x0A
+         db "Idea-x16 PRos", 0x0D, 0x0A, 0
 
 times 510-($-$$) db 0
 dw 0xAA55
