@@ -17,3 +17,35 @@ just build with ```./build.sh``` idk
 # RUN
 
 just put in qemu or like that KripOS.iso (then in grub select Launch KripOS)
+
+
+
+# COMMANDS
+help - help menu
+
+
+info - info
+
+
+shut - shut
+
+
+reboot - reboot
+
+
+clear - clear console
+
+
+
+# TODO
+
+1.Make iso ✔️
+
+
+2.Make colored console ❌
+
+
+3.Make more 5 commands ❌
+
+
+4.idk ❌
