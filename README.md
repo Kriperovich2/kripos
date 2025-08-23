@@ -18,6 +18,11 @@ just build with ```./build.sh``` idk
 
 just put in qemu or like that KripOS.iso (then in grub select Launch KripOS)
 
+or
+
+```
+qemu-system-i386 -cdrom build/KripOS.iso
+```
 
 
 # COMMANDS
@@ -48,7 +53,9 @@ clear - clear console
 3.Make more 5 commands ❌
 
 
-4.idk ❌
+4. Make the fucking optimization ❌
+
+5.idk ❌
 
 
 
