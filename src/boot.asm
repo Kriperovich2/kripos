@@ -94,6 +94,11 @@ main_loop:
     call print_str
     jmp main_loop
 
+.do_pong:
+    mov si, pong_msg
+    call print_str
+    jmp main_loop
+
 ; ----- Основные функции -----
 
 read_input:
@@ -195,6 +200,7 @@ cmd_reboot db "reboot", 0
 cmd_clear db "clear", 0
 cmd_info db "info", 0
 cmd_ver db "ver", 0
+cmd_pong db "ping", 0
 
 help_msg db "Cmds:", 0x0D, 0x0A
          db "help - list", 0x0D, 0x0A
@@ -203,7 +209,7 @@ help_msg db "Cmds:", 0x0D, 0x0A
          db "clear - scr", 0x0D, 0x0A
          db "reboot", 0x0D, 0x0A
          db "ver - version", 0x0D, 0x0A
-         db "", 0x0D, 0x0A, 0
+         db "ping - PONG!", 0x0D, 0x0A, 0
 
 shut_msg db "Power off", 0x0D, 0x0A, 0
 reboot_msg db "Rebooting", 0x0D, 0x0A, 0
@@ -216,6 +222,9 @@ ver_msg  db "KripOS version 1.0", 0x0D, 0x0A
          db "Build: Stable", 0x0D, 0x0A
          db "Arch: x86 (16-bit)", 0x0D, 0x0A
          db "(c) 2025 Kriperovich", 0x0D, 0x0A, 0
+
+; очень важная обнова :D
+pong_msg db "PONG!" 0x0D, 0x0A
 
 times 510-($-$$) db 0
 dw 0xAA55
