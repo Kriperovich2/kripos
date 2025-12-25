@@ -9,11 +9,11 @@ start:
     mov ss, ax
     mov sp, 0x7C00
     sti
-
+    
     ; Очистка экрана
     mov ax, 0x0003
     int 0x10
-
+    
     ; Приветствие
     mov si, welcome_msg
     call print_str
@@ -29,7 +29,7 @@ main_loop:
     mov di, cmd_help
     call str_cmp
     jc .do_help
-
+    
     mov di, cmd_shut
     call str_cmp
     jc .do_shut
@@ -37,14 +37,18 @@ main_loop:
     mov di, cmd_reboot
     call str_cmp
     jc .do_reboot
-
+    
     mov di, cmd_clear
     call str_cmp
     jc .do_clear
-
+    
     mov di, cmd_info
     call str_cmp
     jc .do_info
+    
+    mov di, cmd_ver
+    call str_cmp
+    jc .do_ver
     
     mov si, unknown_cmd
     call print_str
@@ -85,7 +89,13 @@ main_loop:
     call print_str
     jmp main_loop
 
+.do_ver:
+    mov si, ver_msg
+    call print_str
+    jmp main_loop
+
 ; ----- Основные функции -----
+
 read_input:
     mov di, input_buf
     mov cx, 32
@@ -109,7 +119,6 @@ read_input:
     mov ah, 0x0E
     int 0x10
     jmp .key
-
 .back:
     cmp di, input_buf
     jbe .key
@@ -125,7 +134,6 @@ read_input:
     mov al, 0x08
     int 0x10
     jmp .key
-
 .done:
     mov byte [di], 0
     mov si, newline
@@ -173,10 +181,12 @@ print_str:
     ret
 
 ; ----- Данные -----
+
 welcome_msg db "KripOS Console v1.0", 0x0D, 0x0A, 0
-prompt db "KripOS> ", 0
+prompt db "krip@fastuser:~$", 0
 newline db 0x0D, 0x0A, 0
 unknown_cmd db "unknown", 0x0D, 0x0A, 0
+
 input_buf times 32 db 0
 
 cmd_help db "help", 0
@@ -184,6 +194,7 @@ cmd_shut db "shut", 0
 cmd_reboot db "reboot", 0
 cmd_clear db "clear", 0
 cmd_info db "info", 0
+cmd_ver db "ver", 0
 
 help_msg db "Cmds:", 0x0D, 0x0A
          db "help - list", 0x0D, 0x0A
@@ -191,6 +202,7 @@ help_msg db "Cmds:", 0x0D, 0x0A
          db "info - sys", 0x0D, 0x0A 
          db "clear - scr", 0x0D, 0x0A
          db "reboot", 0x0D, 0x0A
+         db "ver - version", 0x0D, 0x0A
          db "", 0x0D, 0x0A, 0
 
 shut_msg db "Power off", 0x0D, 0x0A, 0
@@ -199,6 +211,11 @@ reboot_msg db "Rebooting", 0x0D, 0x0A, 0
 info_msg db "KripOS v1", 0x0D, 0x0A
          db "Author-Kriperovich", 0x0D, 0x0A
          db "Idea-x16 PRos", 0x0D, 0x0A, 0
+
+ver_msg  db "KripOS version 1.0", 0x0D, 0x0A
+         db "Build: Stable", 0x0D, 0x0A
+         db "Arch: x86 (16-bit)", 0x0D, 0x0A
+         db "(c) 2025 Kriperovich", 0x0D, 0x0A, 0
 
 times 510-($-$$) db 0
 dw 0xAA55
